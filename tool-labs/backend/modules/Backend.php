@@ -87,7 +87,8 @@ class Backend extends Base
         $this->logger->log('request: [' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'] . '] by [' . $_SERVER['HTTP_USER_AGENT'] . ']');
 
         /* build cache */
-        $this->cache = new Cacher(CACHE_PATH, $this->logger, !!$this->get('purge'));
+        $purge = $this->getBool('purge') ?? false;
+        $this->cache = new Cacher(CACHE_PATH, $this->logger, $purge);
     }
 
     /**
@@ -125,22 +126,84 @@ class Backend extends Base
     }
 
     /**
+     * Get a raw value from the HTTP request's query arguments.
+     * @param string $name The name of the query argument.
+     * @param int $filter The filter to apply to the value (e.g. `FILTER_VALIDATE_INT`).
+     * @return mixed|null The found value, or null if not found or invalid.
+     */
+    public function getRaw(string $name, int $filter = FILTER_DEFAULT): mixed
+    {
+        $rawValue = filter_input(INPUT_GET, $name);
+
+        if ($rawValue === null || $rawValue === false)
+            return null; // not found or invalid
+
+        return $filter !== FILTER_DEFAULT
+            ? filter_var($rawValue, $filter, FILTER_NULL_ON_FAILURE)
+            : $rawValue;
+    }
+
+    /**
+     * Parse a string value from the HTTP request's query arguments.
+     * @param string $name The name of the query argument.
+     * @param bool $allowBlank Whether to consider whitespace-only values valid.
+     * @return string|null The found value; or null if not found or invalid.
+     */
+    public function getString(string $name, bool $allowBlank = true): ?string
+    {
+        $value = $this->getRaw($name);
+
+        if (!$allowBlank && $value !== null && trim($value) === '')
+            $value = null;
+
+        return $value;
+    }
+
+    /**
+     * Parse a boolean value from the HTTP request's query arguments.
+     * @param string $name The name of the query argument.
+     * @return bool|null The found value, or null if not found or invalid.
+     */
+    public function getBool(string $name): ?bool
+    {
+        return $this->getRaw($name, FILTER_VALIDATE_BOOL);
+    }
+
+    /**
+     * Parse an integer value from the HTTP request's query arguments.
+     * @param string $name The name of the query argument.
+     * @return int|null The found value, or null if not found or invalid.
+     */
+    public function getInt(string $name): ?int
+    {
+        return $this->getRaw($name, FILTER_VALIDATE_INT);
+    }
+
+    /**
      * Get the value of the route placeholder (e.g, 'Pathoschild' in '/stalktoy/Pathoschild').
      * @param int $index The index of the placeholder to get.
-     * @return mixed The expected value (if available).
+     * @param int $filter The filter to apply to the value (e.g. `FILTER_VALIDATE_INT`).
+     * @return mixed The found value, or null if not found or invalid.
      */
-    public function getRouteValue(int $index = 0): mixed
+    public function getRouteValue(int $index = 0, int $filter = FILTER_DEFAULT): mixed
     {
-        $path = $this->get("@path");
-        if ($path)
-        {
-            $path = substr($path, 1); // ignore initial / in path
-            $parts = explode('/', $path);
-            return count($parts) > $index
-                ? $parts[$index]
-                : null;
-        }
-        return null;
+        // get path
+        $path = $this->getString("@path", allowBlank: false);
+        if (!$path)
+            return null;
+
+        // get raw value
+        $path = substr($path, 1); // ignore initial / in path
+        $parts = explode('/', $path);
+        if (count($parts) <= $index)
+            return null;
+        $value = $parts[$index];
+
+        // apply filter
+        if ($filter)
+            $value = filter_var($value, $filter, FILTER_NULL_ON_FAILURE);
+
+        return $value;
     }
 
     /**

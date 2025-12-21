@@ -34,10 +34,10 @@ $maxUsersForInactivity = 3;
 ## Properties
 ##########
 /* input */
-$fullTitle = $backend->formatInitialCapital($backend->get('title'));
-$database = $backend->get('wiki', $backend->get('db', 'incubatorwiki'));
-$cat = !!$backend->get('cat', true);
-$listpages = $backend->get('listpages');
+$fullTitle = $backend->formatInitialCapital($backend->getString('title'));
+$database = $backend->getString('wiki', allowBlank: false) ?? $backend->getString('db', allowBlank: false) ?? 'incubatorwiki';
+$cat = $backend->getBool('cat') ?? true;
+$listPages = $backend->getBool('listpages') ?? false;
 
 /* normalise database */
 if ($database && substr($database, -2) == '_p')
@@ -79,7 +79,7 @@ $db = $backend->getDatabase();
                 ?>
             </select>)<br/><br/>
 
-            <?= Form::checkbox('listpages', $listpages) ?>
+            <?= Form::checkbox('listpages', $listPages) ?>
             <label for="listpages">List all pages and redirects (not recommended)</label>
             <br/>
 
@@ -99,7 +99,7 @@ do {
     // category mode (warn)
     if ($cat) {
         echo '<p class="neutral" style="border-color:#C66;">You have selected category mode, which can be skewed by incorrect categorization. Please review the list of pages generated below.</p>';
-        $listpages = true;
+        $listPages = true;
     }
     if ($namespace) {
         echo '<p class="neutral" style="border-color:#C66;">You have specified the "', $backend->formatText($namespace), '" namespace in the prefix. The details below only reflect edits in that namespace.</p>';
@@ -157,7 +157,7 @@ do {
                     <ol>
                         <li><a href="#list_editors">editors</a></li>
                         <?php
-                        if ($listpages) {
+                        if ($listPages) {
                             ?>
                             <li><a href="#list_pages">pages</a></li>
                             <li><a href="#list_redirects">redirects</a></li>
@@ -210,7 +210,7 @@ do {
         echo '</ol>';
         unset($users);
 
-        if ($listpages) {
+        if ($listPages) {
             /* page list */
             echo '<h4 id="list_pages">pages</h4><ol>';
             foreach ($metrics->pages as $page)

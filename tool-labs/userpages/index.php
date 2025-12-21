@@ -10,11 +10,11 @@ $backend = Backend::create('User pages', 'Find your user pages on all Wikimedia 
 ##########
 ## Get input
 ##########
-$user = $backend->get('user', $backend->getRouteValue());
+$user = $backend->getString('user', allowBlank: false) ?? $backend->getRouteValue();
 if ($user)
     $user = $backend->formatUsername($user);
 $formUser = $backend->formatValue($user);
-$showAll = $backend->get('all', false);
+$showAll = $backend->getBool('all') ?? false;
 
 
 ##########

@@ -31,8 +31,8 @@ $targetForm = '';
 
 # parse target
 # stalktoy is an edge case for route values: an IP range like '127.0.0.1/16' should be treated as one value despite the path separator.
-$target = $backend->get('target');
-if ($target == null) {
+$target = $backend->getString('target', allowBlank: false);
+if (!$target) {
     $target = $backend->getRouteValue();
     if ($target != null && $backend->getRouteValue(1) != null)
         $target .= '/' . $backend->getRouteValue(1);
@@ -40,8 +40,8 @@ if ($target == null) {
 
 # initialise
 $engine = new StalktoyEngine($backend, $target);
-$engine->showAllWikis = $backend->get('show_all_wikis', false);
-$engine->showGroupsPerWiki = $backend->get('global_groups_per_wiki', false);
+$engine->showAllWikis = $backend->getBool('show_all_wikis') ?? false;
+$engine->showGroupsPerWiki = $backend->getBool('global_groups_per_wiki') ?? false;
 $deletedGlobalGroups = ['Cabal'];
 
 $backend->profiler->stop('initialize');

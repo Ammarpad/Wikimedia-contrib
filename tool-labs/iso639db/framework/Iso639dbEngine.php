@@ -62,13 +62,17 @@ class Iso639dbEngine extends Base
     {
         parent::__construct();
 
-        $this->backend = $backend;
-        $this->name = $backend->get('name');
-        $this->code = $backend->get('code');
-        $this->filters = $backend->get('filters') ?? [];
+        $rawFilters = $backend->getRaw('filters') ?? [];
 
-        $this->offset = $backend->get('offset', 0);
-        if ($this->offset < 0 || !is_int($this->offset))
+        $this->backend = $backend;
+        $this->name = $backend->getString('name');
+        $this->code = $backend->getString('code');
+        $this->offset = $backend->getInt('offset') ?? 0;
+        $this->filters = is_array($rawFilters)
+            ? $rawFilters
+            : [$rawFilters];
+
+        if ($this->offset < 0)
             $this->offset = 0;
     }
 

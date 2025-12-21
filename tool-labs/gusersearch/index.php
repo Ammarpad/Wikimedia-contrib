@@ -13,14 +13,14 @@ $backend = Backend::create('gUser search', 'Provides searching and filtering of 
 ## Instantiate script engine
 #############################
 $engine = new GUserSearchEngine($backend);
-$engine->minDate = $backend->get('date');
+$engine->minDate = $backend->getString('date');
 $backend->profiler->start('initialize');
 
 /* get arguments */
-$name = $backend->get('name', $backend->getRouteValue());
-$useRegex = (bool)$backend->get('regex');
-$showLocked = (bool)$backend->get('show_locked');
-$caseInsensitive = (bool)$backend->get('icase');
+$name = $backend->getString('name') ?? $backend->getRouteValue();
+$useRegex = $backend->getBool('regex') ?? false;
+$showLocked = $backend->getBool('show_locked') ?? false;
+$caseInsensitive = $backend->getBool('icase') ?? false;
 
 /* add user name filter */
 if ($name != null) {
@@ -50,13 +50,15 @@ if ($engine->minDate) {
 }
 
 /* set limit */
-if ($x = $backend->get('limit'))
-    $engine->setLimit(intval($x));
+$limit = $backend->getInt('limit');
+if ($limit)
+    $engine->setLimit($limit);
 $limit = $engine->limit;
 
 /* set offset */
-if ($x = $backend->get('offset'))
-    $engine->setOffset(intval($x));
+$offset = $backend->getInt('offset');
+if ($offset)
+    $engine->setOffset($offset);
 $offset = $engine->offset;
 
 $engine->useRegex = $useRegex;

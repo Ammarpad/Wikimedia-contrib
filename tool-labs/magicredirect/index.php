@@ -35,10 +35,10 @@ $tokens = [
 ## Handle request
 ##########
 /* get input */
-$url = $backend->get('url');
-$redirect = $backend->get('redirect', false);
-$wiki = $backend->get('wiki');
-$user = $backend->get('user');
+$url = $backend->getString('url');
+$redirect = $backend->getBool('redirect') ?? false;
+$wiki = $backend->getString('wiki');
+$user = $backend->getString('user');
 
 /* apply data */
 $error = '';

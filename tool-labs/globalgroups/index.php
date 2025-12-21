@@ -296,7 +296,7 @@ foreach ($db->query('SELECT DISTINCT ggp_group FROM centralauth_p.global_group_p
 ##########
 ## Sort
 ##########
-$sort = $backend->get('sort', 'name');
+$sort = $backend->getString('sort') ?? 'name';
 uasort(
     $groups,
     fn($a, $b) => $engine->groupSort($a, $b, $sort)

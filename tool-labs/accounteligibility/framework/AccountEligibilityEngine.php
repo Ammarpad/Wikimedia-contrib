@@ -104,10 +104,10 @@ class AccountEligibilityEngine extends Base
      * Construct an instance.
      * @param Backend $backend Provides a wrapper used by page scripts to generate HTML, interact with the database, and so forth.
      * @param string $user The username to analyse.
-     * @param int $eventId The event ID to analyse.
+     * @param int|null $eventId The event ID to analyse, or null for the default event.
      * @param string $dbname The wiki database name to analyse.
      */
-    public function __construct(Backend $backend, string $user, ?string $eventId, ?string $dbname)
+    public function __construct(Backend $backend, string $user, ?int $eventId, ?string $dbname)
     {
         parent::__construct();
 
@@ -124,7 +124,7 @@ class AccountEligibilityEngine extends Base
         $eventFactory = new EventFactory();
         foreach ($eventFactory->getEvents() as $event)
             $this->events[$event->id] = $event;
-        $this->eventId = $eventId !== null ? intval($eventId) : $eventFactory->getDefaultEventID();
+        $this->eventId = $eventId ?? $eventFactory->getDefaultEventID();
         $this->event = $this->events[$this->eventId];
         $this->profiler->stop("init events");
 
