@@ -23,6 +23,28 @@ class EventFactory
     public function getEvents()
     {
         ##########
+        ## 2026: steward elections
+        ##########
+        // voters
+        yield (new Event(85, 2026, 'steward elections', 'https://meta.wikimedia.org/wiki/Stewards/Elections_2026'))
+            ->addRule(new NotBotRule(), Workflow::HARD_FAIL)
+            ->addRule(new EditCountRule(600, null, '<202511', EditCountRule::ACCUMULATE))     // 600 edits before 01 November 2025
+            ->addRule(new EditCountRule(50, '202508', '<202602', EditCountRule::ACCUMULATE)); // 50 edits between 01 August 2025 and 31 January 2026
+
+        // candidates
+        yield (new Event(84, 2026, 'steward elections (candidates)', 'https://meta.wikimedia.org/wiki/Stewards/Elections_2026'))
+            ->addRule(new NotBotRule(), Workflow::HARD_FAIL)
+            ->addRule(new EditCountRule(600, null, '<202511', EditCountRule::ACCUMULATE))        // 600 edits before 01 November 2025
+            ->addRule(new EditCountRule(50, '202508', '<202602', EditCountRule::ACCUMULATE))     // 50 edits between 01 August 2025 and 31 January 2026
+            ->addRule(new HasGroupDurationRule('sysop', 90, '<20260131'), Workflow::ON_ANY_WIKI) // flagged as a sysop for three months
+            ->withAction('<strong>be a candidate</strong>')
+            ->withExtraRequirements([
+                'You must be at least 18 years old, and at least the age of majority in your country, before 06 February 2026.',
+                'You must agree to abide by the policies governing <a href="https://meta.wikimedia.org/wiki/Special:MyLanguage/Stewards_policy" title="Stewards policy">steward access</a>, <a href="https://meta.wikimedia.org/wiki/Special:MyLanguage/CheckUser_policy" title="checkuser policy">checkuser access</a>, <a href="https://meta.wikimedia.org/wiki/Special:MyLanguage/Oversight_policy" title="oversight policy">oversight access</a>, and <a href="https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Wikimedia_Foundation_Access_to_Nonpublic_Personal_Data_Policy" title="Wikimedia Foundation Access to Nonpublic Personal Data Policy">access to non-public personal data</a>.',
+                'You must <a href="https://foundation.wikimedia.org/wiki/Special:MyLanguage/Legal:Wikimedia_Foundation_Confidentiality_Agreement_for_Nonpublic_Information" title="Wikimedia Foundation Confidentiality Agreement for Nonpublic Information">sign the confidentiality agreement</a>.'
+            ]);
+     
+        ##########
         ## 2025: Wikimedia ESEAP Hub election for Community Connector
         ##########
         yield (new Event(83, 2025, 'Wikimedia ESEAP Hub Community Connector election', 'https://meta.wikimedia.org/wiki/ESEAP_Hub/Governance/Community_Connector/Voting_2025#Voter_eligibility_criteria'))
