@@ -163,8 +163,8 @@ class HasGroupDurationRule implements LocalRule
         }
 
         // get day length
-        $start = DateTime::createFromFormat('YmdHis', $ranges[$longestRange][0]);
-        $end = DateTime::createFromFormat('YmdHis', $ranges[$longestRange][1]);
+        $start = DateTime::createFromFormat('YmdHis', (string)$ranges[$longestRange][0]);
+        $end = DateTime::createFromFormat('YmdHis', (string)$ranges[$longestRange][1]);
         return $start->diff($end)->days;
     }
 
@@ -238,7 +238,7 @@ class HasGroupDurationRule implements LocalRule
         $data = unserialize($params);
         $oldGroups = $data['4::oldgroups'];
         $newGroups = $data['5::newgroups'];
-        $metadata = $data['newmetadata'];
+        $metadata = $data['newmetadata'] ?? null;
 
         $newGroupIndex = array_search($group, $newGroups);
         $hasGroup = $newGroupIndex !== false;
