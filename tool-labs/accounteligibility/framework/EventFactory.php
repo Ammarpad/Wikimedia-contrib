@@ -36,7 +36,7 @@ class EventFactory
             ->addRule(new NotBotRule(), Workflow::HARD_FAIL)
             ->addRule(new EditCountRule(600, null, '<202511', EditCountRule::ACCUMULATE))        // 600 edits before 01 November 2025
             ->addRule(new EditCountRule(50, '202508', '<202602', EditCountRule::ACCUMULATE))     // 50 edits between 01 August 2025 and 31 January 2026
-            ->addRule(new HasGroupDurationRule('sysop', 90, '<20260131'), Workflow::ON_ANY_WIKI) // flagged as a sysop for three months
+            ->addRule(new HasGroupDurationRule(['sysop', 'global-sysop'], 90, '<20260131'), Workflow::ON_ANY_WIKI) // flagged as a sysop or global sysop for three months
             ->withAction('<strong>be a candidate</strong>')
             ->withExtraRequirements([
                 'You must be at least 18 years old, and at least the age of majority in your country, before 06 February 2026.',

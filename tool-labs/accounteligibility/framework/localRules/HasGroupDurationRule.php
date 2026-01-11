@@ -10,9 +10,10 @@ class HasGroupDurationRule implements LocalRule
     ## Properties
     ##########
     /**
-     * The group key to find.
+     * The group keys to find.
+     * @var string[]
      */
-    private string $group;
+    private array $groups;
 
     /**
      * The minimum number of days required.
@@ -36,13 +37,13 @@ class HasGroupDurationRule implements LocalRule
     ##########
     /**
      * Construct an instance.
-     * @param string $group The group key to find.
+     * @param string|string[] $group The group keys to find.
      * @param int $minDays The minimum number of days required.
      * @param string $maxDate The maximum date by which the minimum duration should have been met in a format recognised by {@see DateWrapper::__construct}.
      */
-    public function __construct(string $group, int $minDays, ?string $maxDate)
+    public function __construct(string|array $groups, int $minDays, ?string $maxDate)
     {
-        $this->group = $group;
+        $this->groups = is_array($groups) ? $groups : [$groups];
         $this->minDays = $minDays;
         $this->maxDate = $maxDate ? new DateWrapper($maxDate) : null;
     }
@@ -56,14 +57,20 @@ class HasGroupDurationRule implements LocalRule
      */
     public function accumulate(Toolserver $db, Wiki $wiki, LocalUser $user): ?ResultInfo
     {
-        // get data
-        $days = $this->getLongestRoleDuration($db, $user, $this->group, $wiki);
+        // get longest duration on this wiki for any of the groups
+        $days = 0;
+        foreach ($this->groups as $group) {
+            $curDays = $this->getLongestRoleDuration($db, $user, $group, $wiki);
+            if ($curDays > $days)
+                $days = $curDays;
+        }
 
         // build result
         $result = $days >= $this->minDays ? Result::PASS : Result::FAIL;
+        $groupNames = implode(' or ', $this->groups);
         $message = $result == Result::PASS
-            ? "was flagged as a {$this->group} for a continuous period of at least {$this->minDays} days as of {$this->maxDate->readable} (longest flag duration was {$days} days)."
-            : "was not flagged as a {$this->group} for a continuous period of at {$this->minDays} days as of {$this->maxDate->readable} (" . ($days > 0 ? "longest flag duration was {$days} days" : "never flagged") . ")...";
+            ? "was flagged as a {$groupNames} for a continuous period of at least {$this->minDays} days as of {$this->maxDate->readable} (longest flag duration was {$days} days)."
+            : "was not flagged as a {$groupNames} for a continuous period of at {$this->minDays} days as of {$this->maxDate->readable} (" . ($days > 0 ? "longest flag duration was {$days} days" : "never flagged") . ")...";
         $result = new ResultInfo($result, $message);
 
         // add warning for edge case where user was registered before 2005 (before flag changes were logged)
@@ -103,7 +110,7 @@ class HasGroupDurationRule implements LocalRule
                 logging_logindex
                 LEFT JOIN comment ON log_comment_id = comment_id
             WHERE
-                log_type = "rights"
+                log_type IN ("rights", "gblrights")
                 AND log_title
         ';
         $logName = str_replace(' ', '_', $user->name);
@@ -236,13 +243,13 @@ class HasGroupDurationRule implements LocalRule
 
         // 2012 onwards (serialized structure)
         $data = unserialize($params);
-        $oldGroups = $data['4::oldgroups'];
-        $newGroups = $data['5::newgroups'];
-        $metadata = $data['newmetadata'] ?? null;
+        $oldGroups = $data['4::oldgroups'] ?? $data['oldGroups'];         // local group format ?? global group format
+        $newGroups = $data['5::newgroups'] ?? $data['newGroups'];         // local group format ?? global group format
+        $metadata = $data['newmetadata'] ?? $data['newMetadata'] ?? null; // local group format ?? global group format ?? missing
 
         $newGroupIndex = array_search($group, $newGroups);
         $hasGroup = $newGroupIndex !== false;
-        $hasExpiryField = $hasGroup && $metadata != null && array_key_exists($newGroupIndex, $metadata) && array_key_exists('expiry', $metadata[$newGroupIndex]);
+        $hasExpiryField = $hasGroup && !empty($metadata[$newGroupIndex]['expiry']);
 
         return [
             'old_group' => in_array($group, $oldGroups),
